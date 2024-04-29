@@ -23,7 +23,6 @@ typedef uint8_t ScratchPad[9];
   #define __SPI_CLASS__   SPIClass
 #endif
 
-
 #define DS18B20_NO_TEMPERATURE            -999
 
 //  STATE constants returned by read()
@@ -46,7 +45,6 @@ typedef uint8_t ScratchPad[9];
 #define READSCRATCH             0xBE
 #define WRITESCRATCH            0x4E
 
-
 //  Scratchpad locations
 #define TEMP_LSB                 0
 #define TEMP_MSB                 1
@@ -58,14 +56,11 @@ typedef uint8_t ScratchPad[9];
 #define COUNT_PER_C              7
 #define SCRATCHPAD_CRC           8
 
-
 //  Device resolution
 #define TEMP_9_BIT              0x1F    //   9 bit
 #define TEMP_10_BIT             0x3F    //  10 bit
 #define TEMP_11_BIT             0x5F    //  11 bit
 #define TEMP_12_BIT             0x7F    //  12 bit
-
-
 
 class forteZZaTemp
 {
@@ -93,7 +88,6 @@ public:   forteZZaTemp(uint8_t oneWirePin, uint8_t select, __SPI_CLASS__ * mySPI
   void     setSPIspeed(uint32_t speed);
   uint32_t getSPIspeed() { return _SPIspeed; };
   
-
 //DS18b20
   bool      isConnected(uint8_t retries = 3);
 
@@ -108,9 +102,6 @@ public:   forteZZaTemp(uint8_t oneWirePin, uint8_t select, __SPI_CLASS__ * mySPI
 
   void      setConfig(uint8_t config);
   uint8_t   getConfig();
-
-
-
 
 private:
   uint32_t _read();
