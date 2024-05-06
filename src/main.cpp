@@ -431,6 +431,7 @@ void powermessung()
   lcd.print(lcdstring);
 }
 
+// #colt sein ding
 void colt(int buzzerPin)
 {
 
