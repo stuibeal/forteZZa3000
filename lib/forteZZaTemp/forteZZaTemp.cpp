@@ -76,7 +76,7 @@ bool forteZZaTemp::calibrateOffset(void){
     _tempOben = tempDS18;
   } else {return 1;}
   
-  if (readUnten() == 0) {
+  if (readUnten() != STATUS_NO_COMMUNICATION) {
     _offset = _tempOben - _tempUnten;
   } else {return 1;}
 return (0);
