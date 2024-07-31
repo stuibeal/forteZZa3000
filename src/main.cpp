@@ -178,10 +178,10 @@ void loop()
         lcd.print(lcdstring);
         nabPressMillis = 0;
         delay(3000);
-        if (zMotor.getProzent() == 0)
-        {
-          snuggles(BUZZER_PIN);
-        }
+        // if (zMotor.getProzent() == 0)
+        // {
+        //   snuggles(BUZZER_PIN);
+        // }
       }
     }
   }
