@@ -4,6 +4,14 @@
 *
 *
 */
+// EEPROM Adressen
+#define START_ADDR 0
+#define OFFSET_ADDR 10
+#define NABTIME_ADDR 20
+#define NAUFTIME_ADDR 30
+#define HUBMS_ADDR 40
+
+
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
 #include <OneWire.h>
@@ -13,11 +21,6 @@
 #include "motor.h"
 #include "common.h"
 
-#define START_ADDR 0
-#define OFFSET_ADDR 10
-#define NABTIME_ADDR 20
-#define NAUFTIME_ADDR 30
-#define HUBMS_ADDR 40
 
 const byte THERMOCOUPLE_PIN = 4;
 const byte DS18B20_PIN = 16;
@@ -34,9 +37,8 @@ uint32_t backLightMillis = millis();
 uint16_t warnStatus = 0;
 uint16_t oldWarnStatus = 0;
 uint32_t warnMillis = 0;
-volatile uint32_t nabPressMillis = 0;
-volatile uint32_t naufPressMillis = 0;
 uint32_t doppelKlickTime = millis();
+uint16_t powerW;
 enum WARNSTATE{
     NORMAL, WARNUNG, WAYTOHOT
 };
@@ -63,4 +65,5 @@ void naufINT();
 void powermessung();
 void ausgabe(uint8_t zeile, const char* text);
 void ausgabe(uint8_t zeile, const __FlashStringHelper * text);
+void readTaste(uint16_t tastenpin);
 

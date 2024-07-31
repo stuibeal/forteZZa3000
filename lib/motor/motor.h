@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "common.h"
 
-#define SANFT_ZEIT 21
+#define SANFT_HUB 21
 
 class motor {
 public:
@@ -27,7 +27,10 @@ public:
 	inline uint16_t getHub(void) {
 		return _hub;
 	}
-	;
+	inline void setHub(uint16_t setHub) {
+		_hub = setHub;
+	}
+
 	inline uint32_t getLaufzeitNauf(void) {
 		return _laufzeitNauf;
 	}
@@ -57,7 +60,7 @@ public:
 	}
 
 	enum motorRichtung {
-		NAUF, NAB, STILL
+		NAUF, NAB, STILL, IST_UNTEN, IST_OBEN
 	};
 
 	enum motorState {

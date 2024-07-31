@@ -1,4 +1,5 @@
 #include "motor.h"
+#include "EEPROM.h"
 
 motor::motor() {
 	_prozent = 0;
@@ -37,38 +38,49 @@ void motor::check() {
 		analogWrite(MOTOR_ENABLE_PIN, 0);
 		analogWrite(TASTER_NAB_LED_PIN, LOW);
 		analogWrite(TASTER_NAUF_LED_PIN, LOW);
-		motorR = STILL;
+		if (_prozent == 0) {
+			motorR = IST_UNTEN;
+		} else if (_prozent == 100) {
+			motorR = IST_OBEN;
+		} else {
+			motorR = STILL;
+		}
 		break;
 	case RAUF:
 		digitalWrite(MOTOROUT_PIN, HIGH);
 		sanftAnfahren(TASTER_NAUF_LED_PIN);
 		motorS = RUNNING;
 		motorR = NAUF;
-		old_Millis = millis();
+		_oldMillis = millis();
 		break;
 	case RUNNING:
 		_laufzeit = millis() - _oldMillis;
-		_hub = SANFT_ZEIT+(_laufzeit / _msProMmHub);
+		if (motorR == NAB) {
+			_hub = 398 - SANFT_HUB - (_laufzeit / _msProMmHub);
+			if (_hub < _sollHub + SANFT_HUB) {
+				sanftAuslaufen(TASTER_NAB_LED_PIN);
+				motorS = STOP;
+				_hub = 0;
+				_prozent = 0;
+			}
+		}
+		if (motorR == NAUF) {
+			_hub = SANFT_HUB + (_laufzeit / _msProMmHub);
+			if (_hub > _sollHub - SANFT_HUB) { //
+				sanftAuslaufen(TASTER_NAUF_LED_PIN);
+				motorS = STOP;
+				_hub = 398;
+				_prozent = 100;
+			}
+		}
 		_prozent = (_hub * 100) / 398;
-		if (motorR == NAUF && _hub > _sollHub + SANFT_ZEIT) { //
-			sanftAuslaufen(TASTER_NAUF_LED_PIN);
-			motorS = STOP;
-			_hub = _sollHub;
-			_prozent = 100;
-		}
-		if (motorR == NAB && _hub < _sollHub + SANFT_ZEIT) {
-			sanftAuslaufen(TASTER_NAB_LED_PIN);
-			motorS = STOP;
-			_hub = _sollHub;
-			_prozent = 0;
-		}
 		break;
 	case RUNTER:
 		digitalWrite(MOTORIN_PIN, HIGH);
 		sanftAnfahren(TASTER_NAB_LED_PIN);
 		motorS = RUNNING;
 		motorR = NAB;
-		_laufzeit = millis() - _oldMillis;
+		_oldMillis=millis();
 		break;
 	}
 }
@@ -79,14 +91,6 @@ void motor::sanftAnfahren(uint16_t ledpin) {
 		analogWrite(ledpin, i);
 		delay(10);
 	}
-	switch (ledpin) {
-	case TASTER_NAB_LED_PIN:
-		_hub -= SANFT_ZEIT; 		// das bringt normal 21mm hub (~)
-		break;
-	case TASTER_NAUF_LED_PIN:
-		_hub += SANFT_ZEIT; 		// das bringt normal 21mm hub (~)
-		break;
-	}
 	analogWrite(MOTOR_ENABLE_PIN, 255);
 }
 
@@ -95,15 +99,6 @@ void motor::sanftAuslaufen(uint16_t ledpin) {
 		analogWrite(MOTOR_ENABLE_PIN, i);
 		analogWrite(ledpin, i);
 		delay(10);
-	}
-	analogWrite(MOTOR_ENABLE_PIN, 0);
-	switch (ledpin) {
-	case TASTER_NAB_LED_PIN:
-		_hub -= SANFT_ZEIT; 		// das bringt normal 21mm hub (~)
-		break;
-	case TASTER_NAUF_LED_PIN:
-		_hub += SANFT_ZEIT; 		// das bringt normal 21mm hub (~)
-		break;
 	}
 	analogWrite(MOTOR_ENABLE_PIN, 0);
 }
