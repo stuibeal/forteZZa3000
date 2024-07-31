@@ -70,7 +70,7 @@ bool forteZZaTemp::calibrateOffset(void){
   int16_t tempDS18 = 1000;
   requestTemperatures();
   while(!(isConversionComplete())) {}
-
+  delay(1000);
   tempDS18 = getTempC();
   if (tempDS18 > -120) {
     _tempOben = tempDS18;
