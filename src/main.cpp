@@ -127,10 +127,10 @@ void loop()
         lcd.print(lcdstring);
         naufPressMillis = 0;
         delay(3000);
-        if (zMotor.getProzent() == 100)
-        {
-          colt(BUZZER_PIN);
-        }
+        // if (zMotor.getProzent() == 100)
+        // {
+        //   colt(BUZZER_PIN);
+        // }
       }
     }
   }
