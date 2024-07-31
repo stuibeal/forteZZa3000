@@ -146,7 +146,7 @@ void loop() {
 		}
 	}
 
-	if (zMotor.getMotorState == zMotor.RUNNING) {
+	if (zMotor.getMotorState() == zMotor.RUNNING) {
 		sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(),
 				zMotor.getHub());
 		ausgabe(1, lcdstring);
@@ -259,17 +259,24 @@ void checkTemp(void) {
 
 void kalibrieren(void) {
 	uint32_t antwort;
-	delay(200);
+	ausgabe(0,F("Taste loslassen"));
+	readTaste(TASTER_NAUF_LED_PIN);
+
+	delay(1500);
+
 	ausgabe(0, F("Gleich warm?    "));
 	ausgabe(1, F("NAUF: Ja NAB: Na"));
+	delay(3000);
 	uint8_t taste = 0;
 	do {
-		if (digitalRead(TASTER_NAUF_PIN)) {
-			taste = 1;
-		}
 		if (digitalRead(TASTER_NAB_PIN)) {
 			taste = 2;
 		}
+
+		if (digitalRead(TASTER_NAUF_PIN)) {
+			taste = 1;
+		}
+		delay(30);
 	} while (taste == 0);
 
 	if (taste == 1 && fT.calibrateOffset() == 0) {
@@ -278,6 +285,7 @@ void kalibrieren(void) {
 		sprintf_P(lcdstring, PSTR("neu: %3d°C"), fT.getOffset());
 		ausgabe(1, lcdstring);
 		eeprom_write_word((uint16_t*) START_ADDR + OFFSET_ADDR, fT.getOffset()); //Temp Offset
+		delay(4000);
 	} else {
 		lcd.clear();
 		ausgabe(0, F("Temperatur nicht"));
@@ -405,12 +413,12 @@ void powermessung() {
 }
 
 void ausgabe(uint8_t zeile, const __FlashStringHelper *text) {
-	lcd.setCursor(0, zeile);
+	lcd.setCursor(0,zeile);
 	lcd.print(text);
 }
 
 void ausgabe(uint8_t zeile, const char *text) {
-	lcd.setCursor(zeile, 0);
+	lcd.setCursor(0,zeile);
 	lcd.print(text);
 }
 
