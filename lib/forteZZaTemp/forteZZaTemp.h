@@ -70,6 +70,7 @@ public:   forteZZaTemp(uint8_t oneWirePin, uint8_t select, __SPI_CLASS__ * mySPI
   
   //        Temperatursensoren anfragen
   void      request(void);
+  bool      calibrateOffset(void);
   
   uint8_t  readUnten();
   inline int16_t  getUntenTemp(void)  { return _tempUnten + _offset; };
@@ -78,15 +79,14 @@ public:   forteZZaTemp(uint8_t oneWirePin, uint8_t select, __SPI_CLASS__ * mySPI
   inline uint8_t  getStatus(void) const { return _status; };
 
   //       use offset to calibrate the TC.
-  void     setOffset(const int16_t  t)   { _offset = t; };
-  int16_t  getOffset() const           { return _offset; };
-
-  uint32_t lastRead()    { return _lastTimeRead; };
-  uint16_t getRawData()  { return _rawData;};
+  inline void     setOffset(const int16_t  t)   { _offset = t; };
+  inline int16_t  getOffset() const           { return _offset; };
+  inline uint32_t lastRead()    { return _lastTimeRead; };
+  inline uint16_t getRawData()  { return _rawData;};
 
   //       speed in Hz
   void     setSPIspeed(uint32_t speed);
-  uint32_t getSPIspeed() { return _SPIspeed; };
+  inline uint32_t getSPIspeed() { return _SPIspeed; };
   
 //DS18b20
   bool      isConnected(uint8_t retries = 3);

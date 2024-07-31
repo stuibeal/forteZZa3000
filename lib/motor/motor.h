@@ -19,6 +19,13 @@ class motor
     uint32_t kalibriere(uint16_t taster);
     inline uint16_t getProzent(void) {return _prozent;};
     inline uint16_t getHub(void) {return _hub;};
+    inline uint32_t getLaufzeitNauf(void) {return _laufzeitNauf;}
+    inline uint32_t getLaufzeitNab(void) {return _laufzeitNab;}
+    inline void setLaufzeitNauf(uint32_t laufzeit) {_laufzeitNauf = laufzeit;}
+    inline void setLaufzeitNab(uint32_t laufzeit) {_laufzeitNab = laufzeit;}
+    inline uint16_t getHubMs(void) {return _msProMmHub;}
+    inline void setHubMs(uint16_t hubms) {_msProMmHub = hubms;}
+
     enum motorRichtung
     {
         NAUF, NAB

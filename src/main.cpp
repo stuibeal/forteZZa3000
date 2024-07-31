@@ -4,6 +4,16 @@
  *
  */
 #include "main.h"
+#include "EEPROM.h"
+
+/*
+ * TODO: bei >50W -> colt
+ *       bei >5W -> snuggles+display an
+ *       taste gedrückt: stop motor!!!!
+ *       Thermocouple offset bei Start an DS18B20 ausrichten
+
+*/
+
 
 // LIBS
 LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
@@ -21,7 +31,7 @@ void setup()
   SPI.begin();
   fT.begin();
   fT.setSPIspeed(2000);
-  fT.setOffset(-5); // ThermoCouple Offset
+  fT.setOffset(0); // ThermoCouple Offset erstmal auf 0
   zMotor.begin(&Serial);
 
   // PINS herrichten
@@ -40,12 +50,20 @@ void setup()
   lcd.setCursor(0, 1);
   lcd.print("Z-Gesellschaft");
 
+  //Read Data from EEPROM
+  fT.setOffset(eeprom_read_word((uint16_t*)START_ADDR+OFFSET_ADDR)); //Temp Offset
+  zMotor.setLaufzeitNab(eeprom_read_dword((uint32_t *)START_ADDR+NABTIME_ADDR));
+  zMotor.setLaufzeitNauf(eeprom_read_dword((uint32_t *)START_ADDR+NAUFTIME_ADDR));
+  zMotor.setHubMs(eeprom_read_word((uint16_t*)START_ADDR+HUBMS_ADDR));
+  
   // Sirene mal testen
   sirene(1);
 
   // Dr. Snuggles huldigen
   // snuggles(BUZZER_PIN);
   // Motor kalibrieren
+  
+  
   if (!digitalRead(TASTER_NAB_PIN) || !digitalRead(TASTER_NAUF_PIN))
   {
     delay(1000);
@@ -105,9 +123,8 @@ void loop()
       lcd.print("NAUF extra 3000 ");
       naufPressMillis = 0;
       zMotor.nauf(20);
-      lcd.setCursor(0, 1);
-      sprintf(lcdstring, "%3d %% %3d mm   ", zMotor.getProzent(), zMotor.getHub());
-      lcd.print(lcdstring);
+        sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(), zMotor.getHub());
+        ausgabe(1, lcdstring);
       delay(3000); // Warten damit der Horst das lesen kann
       naufPressMillis = 0;
     }
@@ -119,12 +136,10 @@ void loop()
       // Wenn der Motor nicht ganz oben ist -> bewegen
       if (zMotor.getProzent() < 100)
       {
-        lcd.setCursor(0, 1);
-        lcd.print("NAUF            ");
+        ausgabe(1, F("NAUF            "));
         zMotor.nauf(100);
-        lcd.setCursor(0, 1);
-        sprintf(lcdstring, "%3d %% %3d mm  ", zMotor.getProzent(), zMotor.getHub());
-        lcd.print(lcdstring);
+        sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(), zMotor.getHub());
+        ausgabe(1, lcdstring);
         naufPressMillis = 0;
         delay(3000);
         // if (zMotor.getProzent() == 100)
@@ -152,13 +167,11 @@ void loop()
     // Wenn der Motor auf 0% ist aber nicht ganz unten
     if (nabPressMillis > 1 && zMotor.getProzent() == 0)
     {
-      lcd.setCursor(0, 1);
-      lcd.print("NAB extra 3000  ");
+      ausgabe(1, F("NAB extra 3000  "));
       nabPressMillis = 0;
       zMotor.nab(20);
-      lcd.setCursor(0, 1);
-      sprintf(lcdstring, "%3d %% %3d mm  ", zMotor.getProzent(), zMotor.getHub());
-      lcd.print(lcdstring);
+      sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(), zMotor.getHub());
+      ausgabe(1, lcdstring);
       delay(3000); // Warten damit der Horst das lesen kann
       nabPressMillis = 0;
     }
@@ -170,11 +183,10 @@ void loop()
       // Wenn der Motor nicht ganz unten ist -> bewegen
       if (!zMotor.getProzent() == 0)
       {
-        lcd.setCursor(0, 1);
-        lcd.print("NAB             ");
+        ausgabe(1, F("NAB             "));
         zMotor.nab(100);
         lcd.setCursor(0, 1);
-        sprintf(lcdstring, "%3d %% %3d mm  ", zMotor.getProzent(), zMotor.getHub());
+        sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(), zMotor.getHub());
         lcd.print(lcdstring);
         nabPressMillis = 0;
         delay(3000);
@@ -207,12 +219,14 @@ void naufINT()
 {
   naufPressMillis++;
   doppelKlickTime = millis();
+  naufGedrueckt = 1;
 }
 
 void nabINT()
 {
   nabPressMillis++;
   doppelKlickTime = millis();
+  nabGedrueckt = 1;
 }
 
 void checkTemp(void)
@@ -252,8 +266,7 @@ void checkTemp(void)
 
   if (oldWarnStatus == WARNUNG && warnStatus == WARNUNG)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("R'TENTION HOT!  ");
+    ausgabe(1, F("R'TENTION HOT!  "));
     lcd.backlight();
     zeigTemperatur();
     sirene(1);
@@ -279,8 +292,7 @@ void checkTemp(void)
     oldWarnStatus = NORMAL;
     digitalWrite(TASTER_NAB_LED_PIN, LOW);
     digitalWrite(TASTER_NAUF_LED_PIN, LOW);
-    lcd.setCursor(0, 1);
-    lcd.print("bassd wieda.    ");
+    ausgabe(1, F("bassd wieda.    "));
     delay(3000);
     attachInterrupt(digitalPinToInterrupt(TASTER_NAB_PIN), nabINT, FALLING);
     attachInterrupt(digitalPinToInterrupt(TASTER_NAUF_PIN), naufINT, FALLING);
@@ -288,8 +300,7 @@ void checkTemp(void)
 
   if (warnStatus == WAYTOHOT)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("WAY TO HOT!     ");
+    ausgabe(1, F("WAY TO HOT!     "));
     lcd.backlight();
     sirene2(1);
   }
@@ -314,51 +325,92 @@ void checkTemp(void)
 void kalibrieren(void)
 {
   uint32_t antwort;
-  lcd.setCursor(0, 0);
-  lcd.print("Kalibrierung    ");
-  lcd.setCursor(0, 1);
-  lcd.print("etz owe drugga  ");
+  delay(200);
+  ausgabe(0, F("Gleich warm?    "));
+  ausgabe(1, F("NAUF: JA NAB: NA"));
+  uint8_t taste = 0;
+  do {
+    if (digitalRead(TASTER_NAUF_PIN)) {
+      taste = 1;
+    }
+        if (digitalRead(TASTER_NAB_PIN)) {
+      taste = 2;
+    }
+  } while (taste == 0);
+  
+  if (taste == 1 && fT.calibrateOffset()== 0) {
+     lcd.clear();
+     ausgabe(0, F("Offset kalibr.  "));
+     sprintf_P(lcdstring, PSTR("neu: %3d°C"), fT.getOffset());
+     ausgabe(1, lcdstring);
+    eeprom_write_word((uint16_t*)START_ADDR+OFFSET_ADDR, fT.getOffset()); //Temp Offset
+  } else  {
+    lcd.clear();
+    ausgabe (0, F("Temperatur nicht"));
+    ausgabe (1, F("kalibriert."));
+    delay(2000);
+  }
+
+  ausgabe(0,F("Kalibrierung    "));
+  ausgabe(1,F("etz owe drugga  "));
   antwort = zMotor.kalibriere(TASTER_NAB_PIN);
-  lcd.setCursor(0, 0);
-  lcd.print("sollt unt sa    ");
-  lcd.setCursor(0, 1);
-  lcd.print("etz drugga+haltn");
+  ausgabe(0,F("sollt unt sa    "));
+  ausgabe(1,F("etz drugga+haltn"));
   antwort = zMotor.kalibriere(TASTER_NAUF_PIN);
   sprintf(lcdstring, "affe: %lu ms", antwort);
-  lcd.setCursor(0, 0);
-  lcd.print(lcdstring);
-  lcd.setCursor(0, 1);
-  lcd.println("etz drugga+haltn");
+  ausgabe(0, lcdstring);
+  ausgabe(1,F("etz drugga+haltn"));
   antwort = zMotor.kalibriere(TASTER_NAB_PIN);
   sprintf(lcdstring, "owe: %lu ms", antwort);
-  lcd.setCursor(0, 0);
-  lcd.print(lcdstring);
-  lcd.setCursor(0, 1);
-  lcd.print("etz bist ferte!");
+  ausgabe(0,lcdstring);
+  ausgabe(1, F("etz bist ferte!"));
   delay(5000);
+  
+  eeprom_write_dword((uint32_t *)START_ADDR+NABTIME_ADDR, zMotor.getLaufzeitNab());
+  eeprom_write_dword((uint32_t *)START_ADDR+NAUFTIME_ADDR, zMotor.getLaufzeitNauf());
+  eeprom_write_word((uint16_t*)START_ADDR+HUBMS_ADDR, zMotor.getHubMs());
+  
 }
 
 void zeigTemperatur(void)
 {
-  lcd.setCursor(1, 0);
+  // lcd.createChar(0, tempObenChar);
+  // lcd.createChar(1, gradCChar);
+  // lcd.createChar(2, deltaTChar);
+  // lcd.createChar(3, tempUntenChar);
+  
   sprintf(zahl, "%2d", fT.getObenTemp());
+  lcd.setCursor(0, 0);
+  lcd.write(0); //temp Oben Char
+  lcd.setCursor(1, 0);
   lcd.print(zahl);
+  lcd.setCursor(3, 0);
+  lcd.write(1); // °C Char
 
-  lcd.setCursor(12, 0);
-  sprintf(zahl, "%3d", fT.getUntenTemp());
-  lcd.print(zahl);
-
-  lcd.setCursor(6, 0);
   sprintf(zahl, "%3d", fT.getDeltaTemp());
+  lcd.setCursor(5, 0);
+  lcd.write(2); //delta T Char
+  lcd.setCursor(6, 0);
   lcd.print(zahl);
+  lcd.setCursor(9, 0);
+  lcd.write(1); // °C Char
+
+
+  sprintf(zahl, "%3d", fT.getUntenTemp());
+  lcd.setCursor(11, 0);
+  lcd.write(3); // temp Unten Char
+  lcd.setCursor(12, 0);
+  lcd.print(zahl);
+  lcd.setCursor(15, 0);
+  lcd.write(1); // °C Char
+
 }
 
 void sirene(uint8_t howOften)
 {
-  for (int l = 0; l < howOften; l++)
+  for (int l = 0; l < howOften; l++) {
     digitalWrite(TASTER_NAB_LED_PIN, LOW);
   digitalWrite(TASTER_NAUF_LED_PIN, HIGH);
-  {
     for (int i = 300; i < 1000; i++)
     {
       tone(BUZZER_PIN, i);
@@ -379,13 +431,13 @@ void sirene(uint8_t howOften)
 
 void sirene2(uint8_t howOften)
 {
-  for (int l = 0; l < howOften; l++)
+  for (int l = 0; l < howOften; l++) {
     digitalWrite(TASTER_NAB_LED_PIN, LOW);
-  digitalWrite(TASTER_NAUF_LED_PIN, HIGH);
-  {
-    for (int i = 300; i < 1000; i++)
+    digitalWrite(TASTER_NAUF_LED_PIN, HIGH);
+    for (int i = 300; i < 1000; i++) 
+    {
       tone(BUZZER_PIN, i);
-  }
+    }
   digitalWrite(TASTER_NAB_LED_PIN, HIGH);
   digitalWrite(TASTER_NAUF_LED_PIN, LOW);
 
@@ -397,7 +449,9 @@ void sirene2(uint8_t howOften)
   digitalWrite(TASTER_NAB_LED_PIN, LOW);
   digitalWrite(TASTER_NAUF_LED_PIN, LOW);
   noTone(BUZZER_PIN);
+  }
 }
+
 
 void powermessung()
 {
@@ -430,6 +484,18 @@ void powermessung()
           (abs(powerW % 1000) / 100));
   lcd.print(lcdstring);
 }
+
+
+void ausgabe(uint8_t zeile, const __FlashStringHelper * text) {
+  lcd.setCursor(0, zeile);
+  lcd.print(text);
+}
+
+void ausgabe(uint8_t zeile, const char * text) {
+  lcd.setCursor(zeile, 0);
+  lcd.print(text);
+}
+
 
 // #colt sein ding
 void colt(int buzzerPin)

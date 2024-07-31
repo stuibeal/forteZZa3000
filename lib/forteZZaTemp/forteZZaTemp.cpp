@@ -57,6 +57,21 @@ void forteZZaTemp::request(void){
     
 }
 
+bool forteZZaTemp::calibrateOffset(void){
+  int16_t tempDS18 = 1000;
+  requestTemperatures();
+  while(!isConversionComplete) {}
+  tempDS18 = getTempC();
+  if (tempDS18 > -120) {
+    _tempOben = tempDS18;
+  } else {return 1;}
+  
+  if (readUnten == 0) {
+    _offset = _tempOben - _tempUnten;
+  } else {return 1;}
+return (0);
+}
+
 uint8_t forteZZaTemp::readUnten()
 {
   //  return value of _read()  page 5 datasheet
@@ -68,11 +83,6 @@ uint8_t forteZZaTemp::readUnten()
   //  03 - 14    TEMPERATURE (RAW)
   //       15    SIGN
   uint16_t value = _read();
-
-  //  needs a pull up on MISO pin to work properly!
-  if (value == 0xFFFF)
-  {
-    _status = STATUS_NO_COMMUNICATION;
     return _status;
   }
 
