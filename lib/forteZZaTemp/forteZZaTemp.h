@@ -20,7 +20,7 @@ typedef uint8_t ScratchPad[9];
 
 
 #ifndef __SPI_CLASS__
-  #define __SPI_CLASS__   SPIClass
+#define __SPI_CLASS__   SPIClass
 #endif
 
 #define DS18B20_NO_TEMPERATURE            -999

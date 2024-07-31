@@ -4,6 +4,9 @@
 
 
 #include "forteZZaTemp.h"
+#include "Arduino.h"
+#include "SPI.h"
+#include "OneWire.h"
 
 forteZZaTemp::forteZZaTemp(uint8_t selectOneWire, uint8_t select, __SPI_CLASS__ * mySPI)
 {
@@ -20,6 +23,12 @@ forteZZaTemp::forteZZaTemp(uint8_t selectOneWire, uint8_t select, __SPI_CLASS__ 
   _tempOben = 0;
   _tempDelta = 0;
   _tempUnten = 0;
+  _lastTimeRead = 0;
+  _rawData = 0;
+  _offset = 0;
+  _SPIspeed= 0;
+  _temperature = 0;
+  _status = 0;
 }
 
 bool forteZZaTemp::begin(uint8_t retries)
@@ -60,13 +69,14 @@ void forteZZaTemp::request(void){
 bool forteZZaTemp::calibrateOffset(void){
   int16_t tempDS18 = 1000;
   requestTemperatures();
-  while(!isConversionComplete) {}
+  while(!(isConversionComplete())) {}
+
   tempDS18 = getTempC();
   if (tempDS18 > -120) {
     _tempOben = tempDS18;
   } else {return 1;}
   
-  if (readUnten == 0) {
+  if (readUnten() == 0) {
     _offset = _tempOben - _tempUnten;
   } else {return 1;}
 return (0);
@@ -82,23 +92,28 @@ uint8_t forteZZaTemp::readUnten()
   //       02    INPUT OPEN
   //  03 - 14    TEMPERATURE (RAW)
   //       15    SIGN
-  uint16_t value = _read();
-    return _status;
-  }
+	uint16_t value = _read();
 
-  _lastTimeRead = millis();
+	  //  needs a pull up on MISO pin to work properly!
+	  if (value == 0xFFFF)
+	  {
+	    _status = STATUS_NO_COMMUNICATION;
+	    return _status;
+	  }
 
-  //  process status bit 2
-  _status = value & 0x04;
+	  _lastTimeRead = millis();
 
-   value >>= 3;
+	  //  process status bit 2
+	  _status = value & 0x04;
 
-  //  process temperature bits
-  _tempUnten = (value & 0x1FFF) * 0.25;
-  //  dummy negative flag set ?
-  //  if (value & 0x2000)
-  return _status;
-}
+	   value >>= 3;
+
+	  //  process temperature bits
+	  _tempUnten = (value & 0x1FFF) * 0.25;
+	  //  dummy negative flag set ?
+	  //  if (value & 0x2000)
+	  return _status;
+	}
 
 
 uint16_t forteZZaTemp::getDeltaTemp(void) 

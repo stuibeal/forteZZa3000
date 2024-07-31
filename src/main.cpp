@@ -5,6 +5,7 @@
  */
 #include "main.h"
 #include "EEPROM.h"
+#include <LiquidCrystal_I2C.h>
 
 /*
  * TODO: bei >50W -> colt
@@ -119,8 +120,7 @@ void loop()
     // Wenn der Motor auf 100% ist aber nicht ganz oben
     if (naufPressMillis > 1 && zMotor.getProzent() == 100)
     {
-      lcd.setCursor(0, 1);
-      lcd.print("NAUF extra 3000 ");
+      ausgabe(1,F("NAUF extra 3000 "));
       naufPressMillis = 0;
       zMotor.nauf(20);
         sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(), zMotor.getHub());
@@ -474,15 +474,21 @@ void powermessung()
   aIn = map(tempAin, 0, 2500 - 520, 0, 30000); // das sollten jetzt mA sein
   powerW = (aIn / 10) * (vIn / 100);           // mW!
 
-  lcd.setCursor(0, 1);
-  sprintf(lcdstring, "%2d.%01dV%2d.%01dA%3d.%01dW",
+  sprintf_P(lcdstring, PSTR("%2d.%01dV%2d.%01dA%3d.%01dW"),
           vIn / 1000,
           (abs(vIn % 1000) / 100),
           aIn / 1000,
           (abs(aIn % 1000) / 100),
           powerW / 1000,
           (abs(powerW % 1000) / 100));
-  lcd.print(lcdstring);
+  ausgabe(1,lcdstring);
+  if (powerW>5000) {
+	  lcd.backlight();
+  }
+  if (powerW<5000 && millis()-backLightMillis > BACKLIGHT_MILLIS) {
+	  lcd.noBacklight();
+  }
+
 }
 
 
