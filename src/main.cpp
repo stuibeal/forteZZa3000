@@ -93,6 +93,22 @@ void setup() {
 }
 
 void loop() {
+	Serial.print("MS:");
+	Serial.print(zMotor.getMotorState());
+	Serial.print(" MR:");
+	Serial.print(zMotor.motorR);
+	Serial.print(" %:");
+	Serial.print(zMotor.getProzent());
+	Serial.print(" hub:");
+	Serial.print(zMotor.getHub());
+	Serial.print(" WarnS:");
+	Serial.print(warnStatus);
+	Serial.print(" nabgedr:");
+	Serial.print(nabGedrueckt);
+	Serial.print(" naufgedr:");
+	Serial.println(naufGedrueckt);
+
+
 	zMotor.check();
 
 	if (powerW > 5000) {
@@ -125,9 +141,6 @@ void loop() {
 			zMotor.setHub(50); //cheat: der Hub ist noch nicht 0
 			zMotor.setMotorState(zMotor.RUNTER);
 		}
-
-		zMotor.setSollHub(0);
-		zMotor.setMotorState(zMotor.RAUF);
 	}
 
 	if (naufGedrueckt) {
@@ -136,7 +149,7 @@ void loop() {
 		// Ding ist Unten, soll nach oben
 		if (zMotor.motorR == zMotor.IST_UNTEN
 				|| zMotor.motorR == zMotor.STILL) {
-			zMotor.setSollHub(398);
+			zMotor.setSollHub(400);
 			zMotor.setMotorState(zMotor.RAUF);
 		}
 		// Ding ist schon oben, aber nicht ganz
@@ -151,17 +164,17 @@ void loop() {
 				zMotor.getHub());
 		ausgabe(1, lcdstring);
 	} else {
-		zeigTemperatur();
+		if (millis() - oldMillis > 500) {
+			oldMillis = millis();
+			fT.request();
+			delay(20);
+			checkTemp();
+			zeigTemperatur();
+			powermessung();
+		}
+
 	}
 
-	if (millis() - oldMillis > 500) {
-		oldMillis = millis();
-		fT.request();
-		delay(20);
-		checkTemp();
-		powermessung();
-
-	}
 }
 
 // put function definitions here:

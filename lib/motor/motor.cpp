@@ -56,8 +56,8 @@ void motor::check() {
 	case RUNNING:
 		_laufzeit = millis() - _oldMillis;
 		if (motorR == NAB) {
-			_hub = 398 - SANFT_HUB - (_laufzeit / _msProMmHub);
-			if (_hub < _sollHub + SANFT_HUB) {
+			_hub = 400 - SANFT_HUB - (_laufzeit / _msProMmHub);
+			if (_hub <= _sollHub + SANFT_HUB) {
 				sanftAuslaufen(TASTER_NAB_LED_PIN);
 				motorS = STOP;
 				_hub = 0;
@@ -66,21 +66,22 @@ void motor::check() {
 		}
 		if (motorR == NAUF) {
 			_hub = SANFT_HUB + (_laufzeit / _msProMmHub);
-			if (_hub > _sollHub - SANFT_HUB) { //
+			if (_hub >= _sollHub - SANFT_HUB) { //
 				sanftAuslaufen(TASTER_NAUF_LED_PIN);
 				motorS = STOP;
-				_hub = 398;
+				_hub = 400;
 				_prozent = 100;
 			}
 		}
-		_prozent = (_hub * 100) / 398;
+
+		_prozent = (int16_t) _hub / 4;
 		break;
 	case RUNTER:
 		digitalWrite(MOTORIN_PIN, HIGH);
 		sanftAnfahren(TASTER_NAB_LED_PIN);
 		motorS = RUNNING;
 		motorR = NAB;
-		_oldMillis=millis();
+		_oldMillis = millis();
 		break;
 	}
 }
