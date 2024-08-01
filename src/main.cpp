@@ -24,7 +24,7 @@ void setup() {
 	// put your setup code here, to run once:
 	// start serial port
 	Serial.begin(9600);
-	Serial.println("forteZZa3000");
+	Serial.println(F("forteZZa3000"));
 
 	// Temperatursensoren
 	SPI.begin();
@@ -90,6 +90,7 @@ void setup() {
 	lcd.write(3);
 	lcd.setCursor(15, 0);
 	lcd.write(1);
+	fT.request();
 }
 
 void loop() {
@@ -138,7 +139,7 @@ void loop() {
 		}
 		// Ding ist schon unten, aber nicht ganz
 		if (zMotor.motorR == zMotor.IST_UNTEN) {
-			zMotor.setHub(50); //cheat: der Hub ist noch nicht 0
+			zMotor.setHub(100); //cheat: der Hub ist noch nicht 0
 			zMotor.setMotorState(zMotor.RUNTER);
 		}
 	}
@@ -154,7 +155,7 @@ void loop() {
 		}
 		// Ding ist schon oben, aber nicht ganz
 		if (zMotor.motorR == zMotor.IST_OBEN) {
-			zMotor.setHub(350); //cheat: der Hub ist nocht nicht 398
+			zMotor.setHub(300); //cheat: der Hub ist nocht nicht 398
 			zMotor.setMotorState(zMotor.RAUF);
 		}
 	}
@@ -289,7 +290,7 @@ void kalibrieren(void) {
 		if (digitalRead(TASTER_NAUF_PIN)) {
 			taste = 1;
 		}
-		delay(30);
+		delay(50);
 	} while (taste == 0);
 
 	if (taste == 1 && fT.calibrateOffset() == 0) {
@@ -439,7 +440,7 @@ void readTaste(uint16_t tastenpin) {
 	while (digitalRead(tastenpin)) {
 		delay(20);
 	}
-	delay(20); //debounce
+	delay(50); //debounce
 }
 
 // #colt sein ding

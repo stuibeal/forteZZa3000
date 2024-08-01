@@ -38,7 +38,7 @@ uint16_t warnStatus = 0;
 uint16_t oldWarnStatus = 0;
 uint32_t warnMillis = 0;
 uint32_t doppelKlickTime = millis();
-uint16_t powerW;
+uint32_t powerW;
 enum WARNSTATE{
     NORMAL, WARNUNG, WAYTOHOT
 };

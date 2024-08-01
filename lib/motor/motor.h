@@ -17,13 +17,10 @@ public:
 	void check(void);
 	void sanftAnfahren(uint16_t ledpin);
 	void sanftAuslaufen(uint16_t ledpin);
-	void nauf(uint16_t prozent);
-	void nab(uint16_t prozent);
 	uint32_t kalibriere(uint16_t taster);
 	inline uint16_t getProzent(void) {
 		return _prozent;
 	}
-	;
 	inline uint16_t getHub(void) {
 		return _hub;
 	}

@@ -56,11 +56,13 @@ bool forteZZaTemp::begin(uint8_t retries)
 // Temperaturfühler anfragen
 void forteZZaTemp::request(void){
     //DS18B20 anfragen
-     if (isConversionComplete ())
+	if (isConversionComplete())
     {
-      _tempOben = getTempC();
-      requestTemperatures ();
+    	if (getTempC() != 0) {
+    		_tempOben = getTempC();
+    	}
     }
+	requestTemperatures ();
     //ThermoCouple anfragen
     readUnten();
     
@@ -69,10 +71,12 @@ void forteZZaTemp::request(void){
 bool forteZZaTemp::calibrateOffset(void){
   int16_t tempDS18 = 1000;
   requestTemperatures();
-  while(!(isConversionComplete())) {}
+  while(!isConversionComplete()) {
+	  delay(1);
+  }
   delay(1000);
   tempDS18 = getTempC();
-  if (tempDS18 > -120) {
+  if (tempDS18 > 0) {
     _tempOben = tempDS18;
   } else {return 1;}
   
