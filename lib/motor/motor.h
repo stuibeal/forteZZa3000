@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "common.h"
 
-#define SANFT_HUB 21
+#define SANFT_HUB 20 //mm
 
 class motor {
 public:
@@ -15,8 +15,8 @@ public:
 	~motor(); //Destructor
 	void begin(HardwareSerial *mySerial);
 	void check(void);
-	void sanftAnfahren(uint16_t ledpin);
-	void sanftAuslaufen(uint16_t ledpin);
+	void sanftAnfahren(uint16_t ledpin, uint16_t restHub);
+	void sanftAuslaufen(uint16_t ledpin, uint16_t restHub);
 	uint32_t kalibriere(uint16_t taster);
 	inline uint16_t getProzent(void) {
 		return _prozent;
@@ -61,7 +61,7 @@ public:
 	};
 
 	enum motorState {
-		STOP, RAUF, RUNNING, RUNTER
+		STOP, RAUF, RUNNING, RUNTER, RAUFEXTRA, RUNTEREXTRA
 	};
 
 	enum kaliState {
@@ -69,6 +69,8 @@ public:
 	};
 	uint32_t _laufzeitNauf;
 	uint32_t _laufzeitNab;
+	uint16_t _msProMmHub;
+
 	motorState motorS;
 	motorRichtung motorR;
 
@@ -78,10 +80,11 @@ private:
 	uint16_t _kaliStatus;
 	uint32_t _oldMillis;
 	HardwareSerial *_mySerial;
-	uint16_t _msProMmHub;
 	uint32_t _laufzeit;
 	int16_t _sollProzent;
 	int16_t _sollHub;
+	uint16_t _hubAktuell;
+	uint16_t _oldHub;
 };
 
 //EOF

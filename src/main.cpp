@@ -44,18 +44,16 @@ void setup() {
 	// Print a message to the LCD.
 	lcd.noBacklight();
 	lcd.backlight();
-	lcd.setCursor(0, 0);
-	lcd.print("forteZZa3000");
-	lcd.setCursor(0, 1);
-	lcd.print("Z-Gesellschaft");
+	ausgabe(0, F("forteZZa3000"));
+	ausgabe(1, F("Z-Gesellschaft"));
 
 	//Read Data from EEPROM
-	fT.setOffset(eeprom_read_word((uint16_t*) START_ADDR + OFFSET_ADDR)); //Temp Offset
+	fT.setOffset(eeprom_read_word((uint16_t*) (START_ADDR + OFFSET_ADDR))); //Temp Offset
 	zMotor.setLaufzeitNab(
-			eeprom_read_dword((uint32_t*) START_ADDR + NABTIME_ADDR));
+			eeprom_read_dword((uint32_t*) (START_ADDR + NABTIME_ADDR)));
 	zMotor.setLaufzeitNauf(
-			eeprom_read_dword((uint32_t*) START_ADDR + NAUFTIME_ADDR));
-	zMotor.setHubMs(eeprom_read_word((uint16_t*) START_ADDR + HUBMS_ADDR));
+			eeprom_read_dword((uint32_t*) (START_ADDR + NAUFTIME_ADDR)));
+	zMotor.setHubMs(eeprom_read_word((uint16_t*) (START_ADDR + HUBMS_ADDR)));
 
 	// Sirene mal testen
 	sirene(1);
@@ -94,6 +92,7 @@ void setup() {
 }
 
 void loop() {
+
 	Serial.print("MS:");
 	Serial.print(zMotor.getMotorState());
 	Serial.print(" MR:");
@@ -107,10 +106,33 @@ void loop() {
 	Serial.print(" nabgedr:");
 	Serial.print(nabGedrueckt);
 	Serial.print(" naufgedr:");
-	Serial.println(naufGedrueckt);
-
+	Serial.print(naufGedrueckt);
+	Serial.print(" lzup:");
+	Serial.print(zMotor._laufzeitNauf);
+	Serial.print(" lzNab:");
+	Serial.print(zMotor._laufzeitNab);
+	Serial.print(" ms:");
+	Serial.println(zMotor._msProMmHub);
 
 	zMotor.check();
+
+	if (zMotor.getMotorState() == zMotor.RUNNING) {
+			sprintf_P(lcdstring, PSTR("%3d %% %3d mm    "), zMotor.getProzent(),
+					zMotor.getHub());
+			ausgabe(1, lcdstring);
+		} else {
+			if (millis() - oldMillis > 500) {
+				oldMillis = millis();
+				fT.request();
+				delay(20);
+				checkTemp();
+				zeigTemperatur();
+				powermessung();
+			}
+
+		}
+
+
 
 	if (powerW > 5000) {
 		lcd.backlight();
@@ -123,58 +145,49 @@ void loop() {
 		backLightMillis = millis();
 		// Das Ding soll jetzt Stoppen
 		if (zMotor.motorS == zMotor.RUNNING) {
-			nabGedrueckt = 0;
-			naufGedrueckt = 0;
-			zMotor.setMotorState(zMotor.STOP);
+			if (readTasten(TASTER_NAB_PIN, TASTER_NAUF_PIN)) {
+				zMotor.setMotorState(zMotor.STOP);
+				Serial.println(F("SOLL STOPPEN"));
+				nabGedrueckt = 0;
+				naufGedrueckt = 0;
+			}
 		}
+
 	}
 
 	if (nabGedrueckt && warnStatus == NORMAL) {
-		readTaste(TASTER_NAB_PIN);
-		nabGedrueckt = 0;
-		// Ding ist Oben, soll nach unten
-		if (zMotor.motorR == zMotor.IST_OBEN || zMotor.motorR == zMotor.STILL) {
+		uint16_t tastenZeit = readTastenTime(TASTER_NAB_PIN);
+		// Ding ist schon unten, aber nicht ganz
+		if (tastenZeit > 1000 && zMotor.motorR == zMotor.IST_UNTEN) {
+			ausgabe(1, F("EXTRA HINAB     "));
+			zMotor.setMotorState(zMotor.RUNTEREXTRA);
+		} else if (tastenZeit > 50
+				&& (zMotor.motorR == zMotor.IST_OBEN
+						|| zMotor.motorR == zMotor.STILL)) {
+			// Ding ist Oben, soll nach unten
 			zMotor.setSollHub(0);
 			zMotor.setMotorState(zMotor.RUNTER);
 		}
-		// Ding ist schon unten, aber nicht ganz
-		if (zMotor.motorR == zMotor.IST_UNTEN) {
-			zMotor.setHub(100); //cheat: der Hub ist noch nicht 0
-			zMotor.setMotorState(zMotor.RUNTER);
-		}
+
+		nabGedrueckt = 0;
 	}
 
 	if (naufGedrueckt) {
-		readTaste(TASTER_NAUF_PIN);
-		naufGedrueckt = 0;
-		// Ding ist Unten, soll nach oben
-		if (zMotor.motorR == zMotor.IST_UNTEN
-				|| zMotor.motorR == zMotor.STILL) {
+		uint16_t tastenZeit = readTastenTime(TASTER_NAUF_PIN);
+		if (tastenZeit > 1000 && zMotor.motorR == zMotor.IST_OBEN) {
+			ausgabe(1, F("EXTRA HINAUF    "));
+			zMotor.setMotorState(zMotor.RAUFEXTRA);
+		} else if (tastenZeit > 50
+				&& (zMotor.motorR == zMotor.IST_UNTEN
+						|| zMotor.motorR == zMotor.STILL)) {
+			// Ding ist Unten, soll nach oben
 			zMotor.setSollHub(400);
 			zMotor.setMotorState(zMotor.RAUF);
 		}
 		// Ding ist schon oben, aber nicht ganz
-		if (zMotor.motorR == zMotor.IST_OBEN) {
-			zMotor.setHub(300); //cheat: der Hub ist nocht nicht 398
-			zMotor.setMotorState(zMotor.RAUF);
-		}
+		naufGedrueckt = 0;
 	}
 
-	if (zMotor.getMotorState() == zMotor.RUNNING) {
-		sprintf_P(lcdstring, PSTR("%3d %% %3d mm  "), zMotor.getProzent(),
-				zMotor.getHub());
-		ausgabe(1, lcdstring);
-	} else {
-		if (millis() - oldMillis > 500) {
-			oldMillis = millis();
-			fT.request();
-			delay(20);
-			checkTemp();
-			zeigTemperatur();
-			powermessung();
-		}
-
-	}
 
 }
 
@@ -273,7 +286,7 @@ void checkTemp(void) {
 
 void kalibrieren(void) {
 	uint32_t antwort;
-	ausgabe(0,F("Taste loslassen"));
+	ausgabe(0, F("Taste loslassen"));
 	readTaste(TASTER_NAUF_LED_PIN);
 
 	delay(1500);
@@ -283,11 +296,11 @@ void kalibrieren(void) {
 	delay(3000);
 	uint8_t taste = 0;
 	do {
-		if (digitalRead(TASTER_NAB_PIN)) {
+		if (!digitalRead(TASTER_NAB_PIN)) {
 			taste = 2;
 		}
 
-		if (digitalRead(TASTER_NAUF_PIN)) {
+		if (!digitalRead(TASTER_NAUF_PIN)) {
 			taste = 1;
 		}
 		delay(50);
@@ -298,7 +311,8 @@ void kalibrieren(void) {
 		ausgabe(0, F("Offset kalibr.  "));
 		sprintf_P(lcdstring, PSTR("neu: %3d°C"), fT.getOffset());
 		ausgabe(1, lcdstring);
-		eeprom_write_word((uint16_t*) START_ADDR + OFFSET_ADDR, fT.getOffset()); //Temp Offset
+		eeprom_write_word((uint16_t*) (START_ADDR + OFFSET_ADDR),
+				fT.getOffset()); //Temp Offset
 		delay(4000);
 	} else {
 		lcd.clear();
@@ -322,11 +336,11 @@ void kalibrieren(void) {
 	ausgabe(1, F("etz bist ferte!"));
 	delay(5000);
 
-	eeprom_write_dword((uint32_t*) START_ADDR + NABTIME_ADDR,
+	eeprom_write_dword((uint32_t*) (START_ADDR + NABTIME_ADDR),
 			zMotor.getLaufzeitNab());
-	eeprom_write_dword((uint32_t*) START_ADDR + NAUFTIME_ADDR,
+	eeprom_write_dword((uint32_t*) (START_ADDR + NAUFTIME_ADDR),
 			zMotor.getLaufzeitNauf());
-	eeprom_write_word((uint16_t*) START_ADDR + HUBMS_ADDR, zMotor.getHubMs());
+	eeprom_write_word((uint16_t*) (START_ADDR + HUBMS_ADDR), zMotor.getHubMs());
 
 }
 
@@ -427,20 +441,49 @@ void powermessung() {
 }
 
 void ausgabe(uint8_t zeile, const __FlashStringHelper *text) {
-	lcd.setCursor(0,zeile);
+	lcd.setCursor(0, zeile);
 	lcd.print(text);
 }
 
 void ausgabe(uint8_t zeile, const char *text) {
-	lcd.setCursor(0,zeile);
+	lcd.setCursor(0, zeile);
 	lcd.print(text);
 }
 
-void readTaste(uint16_t tastenpin) {
-	while (digitalRead(tastenpin)) {
-		delay(20);
+bool readTaste(uint16_t tastenpin) {
+	uint32_t tastenMillis = millis();
+	bool taste = 1;
+	while (taste && millis() - tastenMillis < 1000) {
+		taste = digitalRead(tastenpin);
+		delay(1);
 	}
-	delay(50); //debounce
+	return (!taste);
+}
+
+uint16_t readTastenTime(uint16_t tastenpin) {
+	//uint16_t tastenTime = 0;
+	uint32_t tastenMillis = millis();
+	while (!digitalRead(tastenpin)) {
+		delay(1);
+	}
+	return (millis() - tastenMillis);
+}
+
+bool readTasten(uint16_t tastenpin1, uint16_t tastenpin2) {
+	uint32_t tastenMillis = millis();
+	bool taste1 = 1;
+	bool taste2 = 1;
+	while ((taste1 || taste2) && millis() - tastenMillis < 500) {
+		taste1 = !digitalRead(tastenpin1);
+		taste2 = !digitalRead(tastenpin2);
+		Serial.print(tastenpin1);
+		Serial.print(tastenpin2);
+		Serial.print(" ");
+		Serial.print(millis() - tastenMillis);
+		Serial.print(taste1);
+		Serial.println(taste2);
+	}
+	return ((taste1 || taste2));
 }
 
 // #colt sein ding

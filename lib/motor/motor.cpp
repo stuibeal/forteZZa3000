@@ -15,6 +15,8 @@ motor::motor() {
 	_sollHub = 0;
 	motorS = STOP;
 	motorR = STILL;
+	_oldHub = 0;
+	_hubAktuell = 0;
 }
 
 motor::~motor() {
@@ -38,36 +40,59 @@ void motor::check() {
 		analogWrite(MOTOR_ENABLE_PIN, 0);
 		analogWrite(TASTER_NAB_LED_PIN, LOW);
 		analogWrite(TASTER_NAUF_LED_PIN, LOW);
-		if (_prozent == 0) {
-			motorR = IST_UNTEN;
-		} else if (_prozent == 100) {
+		if (_hub > 399) {
 			motorR = IST_OBEN;
+		} else if (_hub < 1) {
+			motorR = IST_UNTEN;
 		} else {
 			motorR = STILL;
 		}
 		break;
 	case RAUF:
+		Serial.println(F("Starte rauf"));
+		digitalWrite(MOTORIN_PIN, LOW);
 		digitalWrite(MOTOROUT_PIN, HIGH);
-		sanftAnfahren(TASTER_NAUF_LED_PIN);
 		motorS = RUNNING;
 		motorR = NAUF;
 		_oldMillis = millis();
+		_oldHub = _hub;
+		Serial.print(_laufzeitNauf);
+		Serial.println(_msProMmHub);
+
+		_msProMmHub = _laufzeitNauf / 398;
+
+		Serial.print(_laufzeitNauf);
+		Serial.println(_msProMmHub);
 		break;
 	case RUNNING:
 		_laufzeit = millis() - _oldMillis;
 		if (motorR == NAB) {
-			_hub = 400 - SANFT_HUB - (_laufzeit / _msProMmHub);
-			if (_hub <= _sollHub + SANFT_HUB) {
-				sanftAuslaufen(TASTER_NAB_LED_PIN);
+			_hubAktuell = _laufzeit / _msProMmHub;
+			_hub = _oldHub - _hubAktuell;
+			if (_hubAktuell < SANFT_HUB + 2) {
+				sanftAnfahren(TASTER_NAB_LED_PIN, _hubAktuell);
+			}
+			if (_hub < _sollHub + SANFT_HUB + 2) {
+				uint16_t restHub = _hub - _sollHub;
+				sanftAuslaufen(TASTER_NAB_LED_PIN, restHub);
+			}
+			if (_hub <= _sollHub) {
 				motorS = STOP;
 				_hub = 0;
 				_prozent = 0;
 			}
 		}
 		if (motorR == NAUF) {
-			_hub = SANFT_HUB + (_laufzeit / _msProMmHub);
-			if (_hub >= _sollHub - SANFT_HUB) { //
-				sanftAuslaufen(TASTER_NAUF_LED_PIN);
+			_hubAktuell = _laufzeit / _msProMmHub;
+			_hub = _oldHub + _hubAktuell;
+			if (_hubAktuell < SANFT_HUB + 2) {
+				sanftAnfahren(TASTER_NAUF_LED_PIN, _hubAktuell);
+			}
+			if (_hub > _sollHub - SANFT_HUB - 2) {
+				uint16_t restHub = _sollHub - _hub;
+				sanftAuslaufen(TASTER_NAUF_LED_PIN, restHub);
+			}
+			if (_hub >= _sollHub) {
 				motorS = STOP;
 				_hub = 400;
 				_prozent = 100;
@@ -77,31 +102,61 @@ void motor::check() {
 		_prozent = (int16_t) _hub / 4;
 		break;
 	case RUNTER:
+		digitalWrite(MOTOROUT_PIN, LOW);
 		digitalWrite(MOTORIN_PIN, HIGH);
-		sanftAnfahren(TASTER_NAB_LED_PIN);
 		motorS = RUNNING;
 		motorR = NAB;
 		_oldMillis = millis();
+		_oldHub = _hub;
+		_msProMmHub = _laufzeitNab /398;
+		Serial.print(_laufzeitNauf);
+		Serial.println(_msProMmHub);
+
 		break;
+	case RAUFEXTRA:
+		digitalWrite(MOTORIN_PIN, LOW);
+		digitalWrite(MOTOROUT_PIN, HIGH);
+		analogWrite(MOTOR_ENABLE_PIN, 255);
+		delay(1500);
+		motorR = IST_OBEN;
+		motorS = STOP;
+		digitalWrite(MOTOROUT_PIN, LOW);
+		analogWrite(MOTOR_ENABLE_PIN,0);
+		break;
+	case RUNTEREXTRA:
+		digitalWrite(MOTOROUT_PIN, LOW);
+		digitalWrite(MOTORIN_PIN, HIGH);
+		analogWrite(MOTOR_ENABLE_PIN, 255);
+		delay(1500);
+		digitalWrite(MOTORIN_PIN, LOW);
+		analogWrite(MOTOR_ENABLE_PIN, 0);
+		motorR = IST_UNTEN;
+		motorS = STOP;
+		break;
+
 	}
 }
 
-void motor::sanftAnfahren(uint16_t ledpin) {
-	for (int i = 100; i < 255; i++) {
-		analogWrite(MOTOR_ENABLE_PIN, i);
-		analogWrite(ledpin, i);
-		delay(10);
+void motor::sanftAnfahren(uint16_t ledpin, uint16_t restHub) {
+	uint8_t anfangPwm = 255 - SANFT_HUB * 6;
+	uint16_t pwm = anfangPwm + restHub * 6;
+	if (pwm > 255) {
+		pwm = 255;
 	}
-	analogWrite(MOTOR_ENABLE_PIN, 255);
+	analogWrite(MOTOR_ENABLE_PIN, (int) pwm);
+	analogWrite(ledpin, (int) pwm);
+	_mySerial->print(pwm);
 }
 
-void motor::sanftAuslaufen(uint16_t ledpin) {
-	for (int i = 255; i > 60; i--) {
-		analogWrite(MOTOR_ENABLE_PIN, i);
-		analogWrite(ledpin, i);
-		delay(10);
+void motor::sanftAuslaufen(uint16_t ledpin, uint16_t restHub) {
+	uint8_t anfangPwm = 255 - SANFT_HUB * 6;
+	uint16_t pwm = anfangPwm + restHub * 6;
+	if (pwm > 255) {
+		pwm = 255;
 	}
-	analogWrite(MOTOR_ENABLE_PIN, 0);
+	analogWrite(MOTOR_ENABLE_PIN, (int) pwm);
+	analogWrite(ledpin, (int) pwm);
+	_mySerial->print(pwm);
 }
 
 /* Laufzeiten:
@@ -134,7 +189,7 @@ uint32_t motor::kalibriere(uint16_t taster) {
 		digitalWrite(TASTER_NAB_LED_PIN, LOW);
 		_kaliStatus++;
 		return 0;
-
+		break;
 	case RAUFKALIBRIEREN:
 		digitalWrite(TASTER_NAUF_LED_PIN, HIGH);
 		digitalWrite(MOTOROUT_PIN, HIGH);
@@ -152,7 +207,7 @@ uint32_t motor::kalibriere(uint16_t taster) {
 		_kaliStatus++;
 		_msProMmHub = _laufzeitNauf / 398;
 		return _laufzeitNauf;
-
+		break;
 	case RUNTERKALIBRIEREN:
 		digitalWrite(TASTER_NAB_LED_PIN, HIGH);
 		digitalWrite(MOTORIN_PIN, HIGH);
@@ -168,10 +223,11 @@ uint32_t motor::kalibriere(uint16_t taster) {
 		digitalWrite(MOTOR_ENABLE_PIN, LOW);
 		digitalWrite(TASTER_NAB_LED_PIN, LOW);
 		_kaliStatus++;
-
 		return _laufzeitNab;
+		break;
 	default:
 		return 0;
+		break;
 	}
 }
 

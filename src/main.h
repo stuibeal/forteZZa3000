@@ -2,15 +2,15 @@
 *  DER Sicherheitsregulator für Thermoelektrische Generatoren
 *  Erstellt 04/2024
 *
-*
+*	ACHTUNG!
+*	Taster sind mit Flipflop-Schaltung, ungedrückt 1, gedrückt 0!!!!!!!
 */
 // EEPROM Adressen
-#define START_ADDR 0
+#define START_ADDR 100
 #define OFFSET_ADDR 10
-#define NABTIME_ADDR 20
-#define NAUFTIME_ADDR 30
-#define HUBMS_ADDR 40
-
+#define NABTIME_ADDR 30
+#define NAUFTIME_ADDR 60
+#define HUBMS_ADDR 90
 
 #include "Arduino.h"
 #include <LiquidCrystal_I2C.h>
@@ -65,5 +65,6 @@ void naufINT();
 void powermessung();
 void ausgabe(uint8_t zeile, const char* text);
 void ausgabe(uint8_t zeile, const __FlashStringHelper * text);
-void readTaste(uint16_t tastenpin);
-
+bool readTaste(uint16_t tastenpin);
+uint16_t readTastenTime(uint16_t tastenpin);
+bool readTasten(uint16_t tastenpin1, uint16_t tastenpin2);

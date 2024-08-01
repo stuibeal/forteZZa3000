@@ -58,8 +58,9 @@ void forteZZaTemp::request(void){
     //DS18B20 anfragen
 	if (isConversionComplete())
     {
-    	if (getTempC() != 0) {
-    		_tempOben = getTempC();
+    	int16_t temp = getTempC();
+		if (temp != 0) {
+    		_tempOben = temp;
     	}
     }
 	requestTemperatures ();

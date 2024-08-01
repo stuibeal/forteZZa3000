@@ -22,37 +22,37 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lib/motor}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lib/forteZZaTemp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/lib/common}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/LiquidCrystal_I2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/SPI/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/LiquidCrystal_I2C}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/EEPROM/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/SPI/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/variant}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/core}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.766580356" name="CPP source files" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.compiler.c.989685034" name="Arduino C Compiler" superClass="io.sloeber.tool.compiler.c">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.c.sketch.option.incpath.2018602211" name="Include Paths (-I)" superClass="io.sloeber.compiler.c.sketch.option.incpath" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/LiquidCrystal_I2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/SPI/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/LiquidCrystal_I2C}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/EEPROM/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/SPI/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/variant}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/core}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.1407008530" name="C Source Files" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.sketch.compiler.s.1377636066" name="Arduino Assembler" superClass="io.sloeber.tool.sketch.compiler.s">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.asm.sketch.option.incpath.849660455" name="Include Paths (-I)" superClass="io.sloeber.compiler.asm.sketch.option.incpath" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/LiquidCrystal_I2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/SPI/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/forteZZa3000/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/LiquidCrystal_I2C}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/EEPROM/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/SPI/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/Wire/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/variant}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/test2/core/core}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.252241640" name="Assembly source files" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>
